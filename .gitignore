@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Terraform: provider cache, state (can contain resource details), and
+# variable files (can contain secrets). The lock file IS committed.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+
+# Lambda zip built by Terraform's archive_file
+build/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+# Local session notes, never committed. Just used for documentation
+CLAUDE.md

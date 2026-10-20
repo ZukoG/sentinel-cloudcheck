@@ -1,0 +1,4 @@
+# Test runner. The Lambda itself has no third-party runtime dependencies:
+# urllib (fetching) is standard library and boto3 (DynamoDB) is already
+# included in the AWS Lambda Python runtime.
+pytest>=8.0
