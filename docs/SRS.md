@@ -1,6 +1,6 @@
 # Software Requirements Specification: sentinel-cloudcheck
 
-Version 0.1.0
+Version 0.2.0
 
 ## 1. Purpose
 
@@ -55,7 +55,13 @@ loopback-style addresses, which is why FR-2.2 exists.
 - FR-3.1: The Lambda sends exactly one GET request to the target, with a
   5 second timeout and a fixed `User-Agent` identifying the tool.
 - FR-3.2: If the target cannot be reached, the API returns 502 with an
-  error message, and nothing is stored.
+  error message, and nothing is stored. A 4xx or 5xx response from the
+  target still counts as reached, since it still has headers to grade.
+- FR-3.3: Redirects are not followed. If the target answers with a 3xx,
+  that redirect response's own headers are graded. Following redirects
+  would mean sending requests to a URL the user never submitted, which
+  would let a redirect bypass the destination checks in FR-2.2. The
+  response includes the target's status code so a redirect is visible.
 
 ### FR-4: Grading
 Each of the six checks below passes or fails. Header names are matched
@@ -78,12 +84,13 @@ case-insensitively.
 
 ### FR-5: Storage
 - FR-5.1: Every successful scan is written to DynamoDB with: `scan_id`
-  (UUID, partition key), `url`, `score`, `grade`, `checks`, `scanned_at`
+  (UUID, partition key), `url`, `status_code`, `score`, `grade`, `checks`, `scanned_at`
   (UTC, ISO 8601).
 
 ### FR-6: Response
-- FR-6.1: A successful scan returns 200 with `scan_id`, `url`, `score`,
-  `grade`, `checks`, and `scanned_at` as JSON.
+- FR-6.1: A successful scan returns 200 with `scan_id`, `url`,
+  `status_code` (the target's HTTP status), `score`, `grade`, `checks`,
+  and `scanned_at` as JSON. `status_code` is also stored (FR-5.1).
 
 ## 5. Non-Functional Requirements
 
