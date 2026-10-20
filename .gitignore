@@ -1,6 +1,3 @@
-# Local session notes, never committed.
-CLAUDE.md
-
 # Python
 __pycache__/
 *.py[cod]
@@ -27,3 +24,6 @@ Thumbs.db
 
 # Environment
 .env
+
+# Local session notes, never committed. Just used for documentation
+CLAUDE.md
