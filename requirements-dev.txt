@@ -2,3 +2,7 @@
 # urllib (fetching) is standard library and boto3 (DynamoDB) is already
 # included in the AWS Lambda Python runtime.
 pytest>=8.0
+
+# Only so handler.py can be imported locally for tests. Never bundled into
+# the Lambda zip, the runtime already provides it. Tests never call AWS.
+boto3>=1.35
