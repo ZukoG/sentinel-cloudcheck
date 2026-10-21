@@ -81,7 +81,9 @@ def check_destination(hostname: str) -> str:
             type=socket.SOCK_STREAM,
             proto=socket.IPPROTO_TCP,
         )
-    except socket.gaierror as error:
+    # OSError, not just socket.gaierror (a subclass): on the Lambda
+    # runtime an unresolvable name can raise a plain OSError instead.
+    except OSError as error:
         raise FetchError(str(error)) from error
 
     if not infos:
