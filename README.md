@@ -14,6 +14,7 @@ Built for a Cloud Computing elective, as a companion to
 ## Documentation
 
 - [Software Requirements Specification](docs/SRS.md)
+- [Security and Cost](docs/SECURITY_AND_COST.md)
 
 ## License
 

@@ -1,6 +1,6 @@
 # Software Requirements Specification: sentinel-cloudcheck
 
-Version 0.2.0
+Version 0.4.0
 
 ## 1. Purpose
 
@@ -37,7 +37,7 @@ client --HTTPS--> API Gateway (HTTP API) --> Lambda (Python) --GET--> target sit
 
 Lambda runs outside any VPC, so it has no route into a private network.
 That alone does not stop it from reaching public cloud metadata or
-loopback-style addresses, which is why FR-2.2 exists.
+loopback-style addresses, which is why FR-2.3 exists.
 
 ## 4. Functional Requirements
 
@@ -47,9 +47,18 @@ loopback-style addresses, which is why FR-2.2 exists.
 ### FR-2: Input validation
 - FR-2.1: The URL must use `http` or `https` and include a host. Anything
   else returns 400 with an error message.
-- FR-2.2 (Day 3): URLs longer than 2048 characters, or whose host resolves
-  to a private, loopback, link-local, or reserved address (including
-  `169.254.169.254`), return 400.
+- FR-2.2: URLs longer than 2048 characters return 400.
+- FR-2.3: The hostname is resolved before fetching, and **every** address
+  it resolves to must be a public (globally routable) address. If any
+  address is private, loopback, link-local (including the
+  `169.254.169.254` cloud metadata address), carrier-grade NAT,
+  unspecified, reserved, or multicast, the API returns 400. IPv4-mapped
+  IPv6 addresses (`::ffff:127.0.0.1`) are checked as the IPv4 address
+  they contain. This also covers IP literals and unusual encodings such
+  as `http://2130706433/`: either they resolve to a blocked address
+  (400), or they do not resolve at all (502). Neither is fetched.
+- FR-2.4: If the hostname cannot be resolved at all, the API returns 502
+  (the target cannot be reached, same as FR-3.2), and nothing is stored.
 
 ### FR-3: Fetch
 - FR-3.1: The Lambda sends exactly one GET request to the target, with a
@@ -60,8 +69,14 @@ loopback-style addresses, which is why FR-2.2 exists.
 - FR-3.3: Redirects are not followed. If the target answers with a 3xx,
   that redirect response's own headers are graded. Following redirects
   would mean sending requests to a URL the user never submitted, which
-  would let a redirect bypass the destination checks in FR-2.2. The
+  would let a redirect bypass the destination checks in FR-2.3. The
   response includes the target's status code so a redirect is visible.
+- FR-3.4: The fetch connects to the exact IP address that FR-2.3 checked,
+  without resolving the hostname a second time. The hostname is still
+  sent in the `Host` header and as the TLS server name, and the TLS
+  certificate is still fully verified against it. This closes DNS
+  rebinding, where a hostile DNS server answers with a public address
+  for the check and a private one for the fetch.
 
 ### FR-4: Grading
 Each of the six checks below passes or fails. Header names are matched
