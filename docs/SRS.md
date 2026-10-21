@@ -1,6 +1,6 @@
 # Software Requirements Specification: sentinel-cloudcheck
 
-Version 0.3.0
+Version 0.4.0
 
 ## 1. Purpose
 
@@ -55,7 +55,8 @@ loopback-style addresses, which is why FR-2.3 exists.
   unspecified, reserved, or multicast, the API returns 400. IPv4-mapped
   IPv6 addresses (`::ffff:127.0.0.1`) are checked as the IPv4 address
   they contain. This also covers IP literals and unusual encodings such
-  as `http://2130706433/`, since they resolve to the same addresses.
+  as `http://2130706433/`: either they resolve to a blocked address
+  (400), or they do not resolve at all (502). Neither is fetched.
 - FR-2.4: If the hostname cannot be resolved at all, the API returns 502
   (the target cannot be reached, same as FR-3.2), and nothing is stored.
 
@@ -70,6 +71,12 @@ loopback-style addresses, which is why FR-2.3 exists.
   would mean sending requests to a URL the user never submitted, which
   would let a redirect bypass the destination checks in FR-2.3. The
   response includes the target's status code so a redirect is visible.
+- FR-3.4: The fetch connects to the exact IP address that FR-2.3 checked,
+  without resolving the hostname a second time. The hostname is still
+  sent in the `Host` header and as the TLS server name, and the TLS
+  certificate is still fully verified against it. This closes DNS
+  rebinding, where a hostile DNS server answers with a public address
+  for the check and a private one for the fetch.
 
 ### FR-4: Grading
 Each of the six checks below passes or fails. Header names are matched
@@ -122,13 +129,6 @@ case-insensitively.
   a scan. This is acceptable for a short-lived demo stack that is
   destroyed after use, and NFR-7 limits the damage. A long-lived
   deployment would need an API key or JWT authorizer.
-- DNS rebinding: FR-2.3 resolves the hostname, then the fetch resolves it
-  again. A hostile DNS server could answer with a public address the
-  first time and a private one the second. Closing this fully means
-  connecting to the already-checked IP directly while still sending the
-  right Host header and TLS server name, which is more than this project
-  needs. The impact is limited: Lambda runs outside any VPC, so there is
-  no private network to reach, and redirects are never followed (FR-3.3).
 
 ## 7. Open Questions
 
