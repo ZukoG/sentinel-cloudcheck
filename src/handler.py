@@ -25,6 +25,10 @@ class FetchError(Exception):
     """Raised when the target URL cannot be reached."""
 
 
+class DestinationError(Exception):
+    """Raised when the target resolves to a non-public address."""
+
+
 def validate_url(url: str) -> str | None:
     """
     Validate the basic structure and length of a URL.
@@ -67,7 +71,7 @@ def check_destination(hostname: str) -> str:
     """
     Resolve a hostname and return a validated public IP address.
 
-    Reject the destination if any resolved address is not public.
+    Raises DestinationError if any resolved address is not public.
     DNS resolution failures raise FetchError.
     """
     try:
@@ -94,7 +98,7 @@ def check_destination(hostname: str) -> str:
             is_public = False
 
         if not is_public:
-            raise ValueError("URL must point to a public address")
+            raise DestinationError("URL must point to a public address")
 
         if address not in addresses:
             addresses.append(address)
@@ -352,7 +356,7 @@ def lambda_handler(event, context):
 
         validated_ip = check_destination(hostname)
 
-    except ValueError as error:
+    except DestinationError as error:
         return _response(400, {"error": str(error)})
 
     except FetchError:
