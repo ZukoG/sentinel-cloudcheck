@@ -61,6 +61,14 @@ throttled to 2 requests per second with a burst of 5
 [`infra/variables.tf`](../infra/variables.tf)). Requests above that get
 `429 Too Many Requests` from API Gateway and never reach Lambda.
 
+API Gateway throttling is best-effort rather than an exact counter, so
+a second limit backs it up: a new AWS account can run at most 10 Lambda
+executions at the same time, and anything beyond that is rejected with
+`503`. Measured against the live stack, 60 requests fired from 40
+parallel threads came back as 36 normal responses, 4 `429` (API Gateway
+throttle), and 20 `503` (Lambda concurrency limit). Either way, a flood
+of requests cannot turn into an unbounded number of invocations.
+
 ## 4. Secrets (NFR-5)
 
 - No credentials exist anywhere in the repo. Terraform and the AWS CLI
