@@ -7,8 +7,8 @@ import socket
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-"""DNS helper function. Simulates DNS responses without querying an actual DNS server"""
 def _fake_dns(*addresses):
+    """Simulate DNS answers without querying a real DNS server."""
     def fake_getaddrinfo(host, port, *args, **kwargs):
         return [
             (None, None, None, "", (address, 0))
@@ -17,12 +17,9 @@ def _fake_dns(*addresses):
 
     return fake_getaddrinfo
 
-"""Apply this fixture to every test in this file (autouse=True)"""
 @pytest.fixture(autouse=True)
-def public_dns(request, monkeypatch):
-    if request.node.name == "test_fetch_headers_does_not_follow_redirects":
-        return
-
+def public_dns(monkeypatch):
+    """Resolve every hostname to a public address unless a test overrides it."""
     monkeypatch.setattr(
         handler.socket,
         "getaddrinfo",
@@ -220,19 +217,6 @@ def test_url_whitespace_is_removed_before_saving(
     
     
 
-class _RedirectServer(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(301)
-        self.send_header(
-            "Location",
-            "http://127.0.0.1:1/never",
-        )
-        self.end_headers()
-
-    def log_message(self, *args):
-        pass
-
-
 def test_fetch_headers_does_not_follow_redirects():
     class RedirectHandler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -247,7 +231,7 @@ def test_fetch_headers_does_not_follow_redirects():
             pass
 
     server = HTTPServer(("127.0.0.1", 0), RedirectHandler)
-    thread = threading.Thread(target=server.serve_forever)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
     try:
