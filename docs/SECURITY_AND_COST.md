@@ -42,11 +42,15 @@ Defences, in layers:
 | Length limit (2048) | Oversized input | FR-2.2 |
 | Public-address-only resolution | `127.0.0.1`, private ranges, `169.254.169.254` (cloud metadata), IPv6 equivalents, encoded forms like `http://2130706433/` | FR-2.3 |
 | Redirects never followed | A public URL that redirects to an internal one | FR-3.3 |
+| Connection pinned to the checked IP | DNS rebinding: a hostile DNS server answering with a public address for the check, then a private one for the fetch | FR-3.4 |
+| Full TLS verification | A pinned connection to the wrong server: the certificate must still match the hostname | FR-3.4 |
 | Lambda outside any VPC | There is no private network attached to reach | `infra/main.tf` |
 | One GET, 5 second timeout | Using the scanner to hammer a target | FR-3.1, NFR-1 |
 
-Known gap: DNS rebinding, recorded with its reasoning as an accepted
-risk in SRS section 6.
+Error responses never echo internal details: a blocked destination
+returns only "URL must point to a public address", without the address
+it resolved to, and an unreachable one returns only "Unable to reach
+target".
 
 ## 3. Abuse limits (NFR-7)
 
