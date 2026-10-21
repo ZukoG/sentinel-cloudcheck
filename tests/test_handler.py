@@ -347,12 +347,21 @@ def test_destination_is_rejected_if_any_dns_answer_is_private(
     
     
 
+@pytest.mark.parametrize(
+    "dns_error",
+    [
+        socket.gaierror("no such host"),
+        # What the Lambda runtime actually raised for an unresolvable name.
+        OSError(16, "Device or resource busy"),
+    ],
+)
 def test_dns_failure_returns_502_without_saving(
+    dns_error,
     monkeypatch,
     saved_items,
 ):
     def fake_getaddrinfo(*args, **kwargs):
-        raise socket.gaierror("no such host")
+        raise dns_error
 
     monkeypatch.setattr(
         handler.socket,
