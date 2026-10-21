@@ -172,22 +172,20 @@ class _PinnedHTTPSConnection(http.client.HTTPSConnection):
         self._validated_address = address
 
     def connect(self):
-            raw_socket = _open_pinned_socket(
-                self._validated_address,
-                self.port,
-                self.timeout,
+        raw_socket = _open_pinned_socket(
+            self._validated_address,
+            self.port,
+            self.timeout,
+        )
+
+        try:
+            self.sock = self._context.wrap_socket(
+                raw_socket,
+                server_hostname=self.host,
             )
-
-            try:
-                self.sock = self._context.wrap_socket(
-                    raw_socket,
-                    server_hostname=self.host,
-                )
-            except Exception:
-                raw_socket.close()
-                raise
-
-
+        except Exception:
+            raw_socket.close()
+            raise
 
 
 def fetch_headers(
@@ -197,7 +195,6 @@ def fetch_headers(
     """
     Fetch HTTP headers using a previously validated IP address.
 
-    ```
     Redirects are not followed. HTTP responses such as 301, 404 and
     500 are returned normally with their status codes and headers.
     """
