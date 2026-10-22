@@ -11,6 +11,36 @@ one command creates it, one command removes it.
 Built for a Cloud Computing elective, as a companion to
 [sentinel-secscan](https://github.com/ZukoG/sentinel-secscan).
 
+## Table of contents
+
+- 💡 [Why](#why)
+- 🏗️ [Architecture](#architecture)
+- 🔍 [What it checks](#what-it-checks)
+- 🧰 [Before you start](#before-you-start)
+  - 👤 [Step 1: Create an AWS account](#step-1-create-an-aws-account)
+  - 🔐 [Step 2: Protect the account with MFA](#step-2-protect-the-account-with-mfa)
+  - 💰 [Step 3: Set a zero-spend alert](#step-3-set-a-zero-spend-alert)
+  - 🔑 [Step 4: Create your own user and access key](#step-4-create-your-own-user-and-access-key)
+  - 📦 [Step 5: Install Git, the AWS CLI, and Terraform](#step-5-install-git-the-aws-cli-and-terraform)
+  - 🐍 [Step 6 (optional): Install Python](#step-6-optional-install-python)
+  - 🔗 [Step 7: Connect the AWS CLI to your account](#step-7-connect-the-aws-cli-to-your-account)
+  - ✅ [Step 8: Check everything works](#step-8-check-everything-works)
+- 🚀 [How to run it](#how-to-run-it)
+  - ⬇️ [Step 1: Download the project](#step-1-download-the-project)
+  - 📂 [Step 2: Go into the project's infra folder](#step-2-go-into-the-projects-infra-folder)
+  - ⚙️ [Step 3: Prepare Terraform](#step-3-prepare-terraform-first-time-only)
+  - ☁️ [Step 4: Build it on AWS](#step-4-build-it-on-aws)
+  - 🌐 [Step 5: Scan a website](#step-5-scan-a-website)
+  - 👀 [Step 6: See it in the AWS console](#step-6-see-it-in-the-aws-console)
+  - 🧹 [Step 7: Remove everything when you are done](#step-7-remove-everything-when-you-are-done)
+- 🧪 [Running the tests](#running-the-tests)
+- 🛡️ [Security](#security)
+- 💵 [Cost](#cost)
+- 🗂️ [Project structure](#project-structure)
+- 🩺 [Troubleshooting](#troubleshooting)
+- 📚 [Documentation](#documentation)
+- 📄 [License](#license)
+
 ## Why
 
 Missing security headers are one of the most common, and easiest to
