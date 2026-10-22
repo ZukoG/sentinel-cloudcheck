@@ -1,6 +1,6 @@
 # Software Requirements Specification: sentinel-cloudcheck
 
-Version 0.4.0
+Version 1.0.0
 
 ## 1. Purpose
 
@@ -132,4 +132,4 @@ case-insensitively.
 
 ## 7. Open Questions
 
-None yet.
+None. Every question raised during development is resolved in the requirements above.
