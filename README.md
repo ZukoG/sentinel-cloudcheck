@@ -58,15 +58,159 @@ Score is the share of checks passed (0 to 100). Grade: **A** 90+,
 **B** 75+, **C** 60+, **D** 40+, **F** below 40. Full rules are in
 [SRS section 4](docs/SRS.md#4-functional-requirements).
 
+## Before you start
+
+You need one AWS account and three free programs. This takes about 20
+minutes the first time, and you only ever do it once.
+
+| You need | What it is | Cost |
+|---|---|---|
+| An AWS account | Where the project runs | Free plan, nothing charged |
+| Git | Downloads the project | Free |
+| AWS CLI | Lets your computer talk to your AWS account | Free |
+| Terraform | Builds and removes everything on AWS for you | Free |
+| Python (optional) | Only needed to run the tests | Free |
+
+> **About the terminal:** a few steps ask you to type a command. On
+> Windows, press the Windows key, type **PowerShell**, and press Enter.
+> On macOS, open **Terminal** from Applications, then Utilities. Copy a
+> command from this page, paste it into that window, and press Enter.
+
+### Step 1: Create an AWS account
+
+> AWS Skill Builder and AWS Educate logins are **not** AWS accounts.
+> They are for courses only and cannot run this project.
+
+1. Go to **https://signin.aws.amazon.com/signup?request_type=register**
+2. Enter your email and an account name, then type in the code AWS emails you.
+3. Choose a password. This is the **root** login, the master key to the account.
+4. If asked to choose a plan, pick **Free plan**.
+5. Choose **Personal** and fill in your details.
+6. Add a bank card. AWS uses it to check you are a real person. The free plan does not charge it.
+7. Confirm your phone number with the code AWS sends.
+8. For the support plan, choose **Basic support (free)**.
+
+### Step 2: Protect the account with MFA
+
+MFA means a password alone is not enough to get in.
+
+1. Sign in at **https://console.aws.amazon.com/** as **Root user**.
+2. Go to **https://console.aws.amazon.com/iam/home#/security_credentials**
+3. Under **Multi-factor authentication (MFA)**, click **Assign MFA device**.
+4. Choose **Authenticator app**, then scan the QR code with an app such
+   as Google Authenticator or Microsoft Authenticator on your phone.
+5. Type in two codes from the app, one after the other, and click **Add MFA**.
+
+### Step 3: Set a zero-spend alert
+
+This emails you if your account is ever charged even 1 cent, so there
+are no surprises.
+
+1. Go to **https://console.aws.amazon.com/billing/home#/budgets**
+2. Click **Create budget**, then **Use a template**.
+3. Pick **Zero spend budget**, enter your email, and click **Create budget**.
+
+### Step 4: Create your own user and access key
+
+The root login should not be used day to day. Create a separate user
+for this project.
+
+1. Go to **https://console.aws.amazon.com/iam/home#/users** and click **Create user**.
+2. Name it (for example `my-admin`). Leave **console access unticked**. Click **Next**.
+3. Choose **Attach policies directly**, tick **AdministratorAccess**, click **Next**, then **Create user**.
+4. Click the new user's name, open the **Security credentials** tab, and click **Create access key**.
+5. Choose **Command Line Interface (CLI)**, tick the confirmation box, click **Next**, then **Create access key**.
+6. Click **Download .csv file** and keep it somewhere safe.
+
+> **Keep that .csv file private.** It holds an *Access Key ID* and a
+> *Secret Access Key*, which together work like a password to your AWS
+> account. Never paste them into a chat, an email, a screenshot, or any
+> file in a project. This project never needs them written down
+> anywhere except in step 7 below.
+
+### Step 5: Install Git, the AWS CLI, and Terraform
+
+**Windows:** open PowerShell and run these three commands, one at a time:
+
+```powershell
+winget install --id Git.Git -e
+winget install --id Amazon.AWSCLI -e
+winget install --id Hashicorp.Terraform -e
+```
+
+**macOS:** install [Homebrew](https://brew.sh) first if you do not have it, then:
+
+```bash
+brew install git awscli hashicorp/tap/terraform
+```
+
+**Linux:** install Git from your package manager (for example
+`sudo apt install git`), then follow the official guides for the
+[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+and [Terraform](https://developer.hashicorp.com/terraform/install).
+
+If you prefer normal installers, download them from
+**https://git-scm.com/downloads**,
+**https://awscli.amazonaws.com/AWSCLIV2.msi** (Windows AWS CLI), and
+**https://developer.hashicorp.com/terraform/install**.
+
+> **Important:** close the terminal window and open a new one after
+> installing. A window that was already open does not know about the
+> new programs yet, and will say "not recognized".
+
+### Step 6 (optional): Install Python
+
+Only needed if you want to run the tests. On Windows:
+
+```powershell
+winget install --id Python.Python.3.13 -e
+```
+
+Or download it from **https://www.python.org/downloads/**. On the first
+installer screen, tick **Add python.exe to PATH**.
+
+### Step 7: Connect the AWS CLI to your account
+
+In a new terminal window, run:
+
+```bash
+aws configure
+```
+
+It asks four questions. Answer each and press Enter:
+
+| Question | What to type |
+|---|---|
+| AWS Access Key ID | The *Access key ID* from your .csv file |
+| AWS Secret Access Key | The *Secret access key* from your .csv file |
+| Default region name | `eu-west-1` |
+| Default output format | `json` |
+
+Newer versions of the AWS CLI may also ask whether to set up "AWS skills
+and the AWS MCP server" for AI coding agents. Type `n`. This project
+does not need it.
+
+### Step 8: Check everything works
+
+Run these one at a time. Each should print a version number:
+
+```bash
+git --version
+aws --version
+terraform version
+```
+
+Then check that AWS knows who you are:
+
+```bash
+aws sts get-caller-identity
+```
+
+You should see your 12-digit account number and a line ending in
+`user/my-admin` (or whatever you named your user). If you do, you are
+ready.
+
 ## Quick start
-
-### Prerequisites
-
-- An AWS account with an IAM user (not root) and the
-  [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-  configured via `aws configure`. Check it with `aws sts get-caller-identity`.
-- [Terraform](https://developer.hashicorp.com/terraform/install) 1.6 or newer.
-- Python 3.12 or newer, only for running the tests.
 
 ### 1. Deploy
 
