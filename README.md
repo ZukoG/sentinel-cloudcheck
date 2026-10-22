@@ -210,18 +210,66 @@ You should see your 12-digit account number and a line ending in
 `user/my-admin` (or whatever you named your user). If you do, you are
 ready.
 
-## Quick start
+## How to run it
 
-### 1. Deploy
+Finished [Before you start](#before-you-start)? Then this takes about 5
+minutes. Every step says what you should see, so you always know it
+worked.
+
+### Step 1: Download the project
+
+In a terminal, run:
 
 ```bash
 git clone https://github.com/ZukoG/sentinel-cloudcheck.git
+```
+
+You should see `Cloning into 'sentinel-cloudcheck'...`. This makes a
+`sentinel-cloudcheck` folder inside whichever folder your terminal is
+in (usually your user folder).
+
+> **No Git?** On this project's GitHub page, click the green **Code**
+> button, then **Download ZIP**, and extract it. The folder will be
+> called `sentinel-cloudcheck-main` instead, so use that name in step 2.
+
+### Step 2: Go into the project's `infra` folder
+
+```bash
 cd sentinel-cloudcheck/infra
+```
+
+`cd` means "change directory", which moves the terminal into that
+folder. The `infra` folder holds the files describing everything that
+gets built on AWS.
+
+### Step 3: Prepare Terraform (first time only)
+
+```bash
 terraform init
+```
+
+Terraform downloads the small add-ons it needs to talk to AWS. You
+should see, in green:
+
+```
+Terraform has been successfully initialized!
+```
+
+### Step 4: Build it on AWS
+
+```bash
 terraform apply
 ```
 
-Type `yes` when asked. It takes under a minute and ends with:
+Terraform shows a long list of the 10 things it is about to create,
+then asks:
+
+```
+Do you want to perform these actions?
+  Enter a value:
+```
+
+Type `yes` and press Enter. Under a minute later you should see:
 
 ```
 Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
@@ -233,27 +281,37 @@ scan_url = "https://<api-id>.execute-api.eu-west-1.amazonaws.com/scan"
 table_name = "sentinel-cloudcheck-scans"
 ```
 
-The default region is `eu-west-1`. To use another one, run
-`terraform apply -var="aws_region=<region>"`.
+That `scan_url` is your live API on the internet. The project is now
+running.
 
-### 2. Scan a site
+> Want a different AWS region than Ireland (`eu-west-1`)? Use
+> `terraform apply -var="aws_region=<region>"` instead.
 
-**Windows PowerShell** (in PowerShell, `curl` is a different command,
-so use `Invoke-RestMethod`):
+### Step 5: Scan a website
+
+Stay in the same terminal (still inside `infra`), and copy the block for
+your system. To scan a different site, change `https://github.com` to
+any website address.
+
+**Windows (PowerShell):**
 
 ```powershell
 $url = terraform output -raw scan_url
 Invoke-RestMethod -Method Post -Uri $url -ContentType "application/json" -Body '{"url": "https://github.com"}' | ConvertTo-Json -Depth 5
 ```
 
-**Linux, macOS, or Git Bash:**
+> In PowerShell, `curl` is a different command, which is why this uses
+> `Invoke-RestMethod` instead.
+
+**macOS, Linux, or Git Bash:**
 
 ```bash
 URL=$(terraform output -raw scan_url)
 curl -s -X POST "$URL" -H "Content-Type: application/json" -d '{"url": "https://github.com"}'
 ```
 
-Real response from a live deployment:
+You should get back the site's grade. This is a real response from a
+live deployment:
 
 ```json
 {
@@ -274,13 +332,31 @@ Real response from a live deployment:
 }
 ```
 
-Errors come back as JSON too. Also captured from the live deployment:
+How to read it: `grade` is the overall result (A is best, F is worst),
+`score` is out of 100, and each entry in `checks` says whether one
+security header passed and why. GitHub got a B because it is missing
+only `Permissions-Policy`.
 
-| Request `url` | Status | Response |
+Bad requests get a clear error instead. These were also captured from
+the live deployment:
+
+| If you send | You get | Why |
 |---|---|---|
-| `http://169.254.169.254/latest/meta-data/` | 400 | `{"error": "URL must point to a public address"}` |
-| `ftp://example.com` | 400 | `{"error": "URL scheme must be http or https"}` |
-| `https://does-not-exist.invalid` | 502 | `{"error": "Unable to reach target"}` |
+| `http://169.254.169.254/latest/meta-data/` | 400 `{"error": "URL must point to a public address"}` | Internal cloud addresses are blocked |
+| `ftp://example.com` | 400 `{"error": "URL scheme must be http or https"}` | Only website addresses are accepted |
+| `https://does-not-exist.invalid` | 502 `{"error": "Unable to reach target"}` | The site does not exist |
+
+### Step 6: See it in the AWS console
+
+1. Sign in at **https://console.aws.amazon.com/** (your own user or root both work).
+2. **Check the region** in the top-right corner says **Europe (Ireland)**.
+   If it shows another region, click it and choose Europe (Ireland),
+   otherwise everything will look empty.
+3. Type the service name into the search bar at the top:
+   - **DynamoDB**, then **Explore items**, then `sentinel-cloudcheck-scans`: every scan you ran is stored here
+   - **Lambda**, then `sentinel-cloudcheck-scanner`: the code that does the scanning
+   - **CloudWatch**, then **Log groups**, then `/aws/lambda/sentinel-cloudcheck-scanner`: a log of every run
+   - **API Gateway**, then `sentinel-cloudcheck-api`: the public address and its rate limit
 
 Only successful scans are stored. The DynamoDB table after the scans
 above:
@@ -294,26 +370,31 @@ above:
 +-------+--------+-------------------------------+
 ```
 
-### 3. See it in the AWS console
+### Step 7: Remove everything when you are done
 
-Make sure the region selector (top right) matches the deployed region,
-**Europe (Ireland)** by default, or everything will look empty.
-
-- **DynamoDB**, then Explore items, then `sentinel-cloudcheck-scans`: one item per scan
-- **Lambda**, then `sentinel-cloudcheck-scanner`: the function and its Monitor tab
-- **CloudWatch**, then Log groups, then `/aws/lambda/sentinel-cloudcheck-scanner`: one log stream per run
-- **API Gateway**, then `sentinel-cloudcheck-api`: the route and throttling settings
-
-### 4. Tear it down
+**Do not skip this.** Back in the terminal, still inside `infra`:
 
 ```bash
 terraform destroy
 ```
 
-Type `yes`. It ends with `Destroy complete! Resources: 10 destroyed.`
-and removes everything, logs included. To double-check nothing is
-left, `terraform state list` should print nothing. More ways to verify
-are in [Security and Cost](docs/SECURITY_AND_COST.md#6-teardown).
+Type `yes` when asked. You should see:
+
+```
+Destroy complete! Resources: 10 destroyed.
+```
+
+Everything the project created on AWS is now gone, logs and stored scans
+included, so nothing keeps running. To bring it back any time, just
+repeat steps 4 to 6 (you get a new `scan_url` each time).
+
+To double-check nothing is left, this should print nothing at all:
+
+```bash
+terraform state list
+```
+
+More ways to verify are in [Security and Cost](docs/SECURITY_AND_COST.md#6-teardown).
 
 ## Running the tests
 
@@ -383,6 +464,8 @@ docs/
 |---|---|
 | `terraform` or `aws` is "not recognized" right after installing | Close and reopen the terminal so it picks up the new PATH |
 | `pip install` fails on Windows with a long path error | Clone into a shorter folder (for example `C:\Users\<you>\Desktop`). botocore's data files have very long names |
+| `terraform apply` says `No valid credential sources found` | The AWS CLI is not connected yet. Redo [Step 7](#step-7-connect-the-aws-cli-to-your-account) of Before you start |
+| `terraform output` says no outputs found | You are not in the `infra` folder, or nothing is deployed. `cd` into `infra` and run `terraform apply` |
 | The AWS console shows nothing | Switch the region selector to the deployed region (Europe (Ireland) by default) |
 | `429 Too Many Requests` or `503` | You hit the API throttle or the account's Lambda concurrency limit. Wait a second and retry |
 
