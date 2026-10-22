@@ -24,6 +24,3 @@ Thumbs.db
 
 # Environment
 .env
-
-# Local session notes, never committed. Just used for documentation
-CLAUDE.md
