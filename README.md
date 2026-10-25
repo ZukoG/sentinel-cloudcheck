@@ -507,3 +507,5 @@ docs/
 ## License
 
 [MIT](LICENSE)
+
+WeThinkCode_ project verification: WTC-JM4ED2VC
