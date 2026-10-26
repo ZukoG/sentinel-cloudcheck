@@ -1,0 +1,42 @@
+# Dependabot opens pull requests when a dependency falls behind. Each PR
+# still has to pass CI (tests plus terraform fmt and validate) before it
+# can be merged.
+version: 2
+updates:
+  # Actions used in .github/workflows/ci.yml (checkout, setup-python,
+  # setup-terraform).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # Dev dependencies in requirements-dev.txt (pytest, boto3). The Lambda
+  # itself bundles nothing: boto3 comes from the AWS runtime.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      dev-tools:
+        patterns: ["*"]
+
+  # Terraform providers in infra/ (hashicorp/aws, hashicorp/archive).
+  # Updates the version pins and .terraform.lock.hcl together.
+  - package-ecosystem: "terraform"
+    directory: "/infra"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      providers:
+        patterns: ["*"]
