@@ -503,6 +503,7 @@ docs/
 
 - [Software Requirements Specification](docs/SRS.md)
 - [Security and Cost](docs/SECURITY_AND_COST.md)
+- [ADR 0001: Serverless Lambda over EC2](docs/adr/0001-serverless-lambda-over-ec2.md)
 
 ## License
 
