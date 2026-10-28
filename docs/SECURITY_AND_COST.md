@@ -125,3 +125,25 @@ aws resourcegroupstaggingapi get-resources --tag-filters Key=Project,Values=sent
 
 `terraform destroy` also removes the logs, because the log group is
 managed by Terraform rather than created automatically by Lambda.
+
+## 7. Code and dependency scanning
+
+Every pull request runs two security checks in CI alongside the tests
+and Terraform checks
+([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)):
+
+| Job | What it looks for | Result when added |
+|---|---|---|
+| bandit (SAST) | Insecure Python patterns in `src/`, such as shell injection, weak hashing, or disabled TLS verification | 0 issues in 452 lines |
+| pip-audit | Published vulnerabilities in every package in `requirements-dev.txt` | No known vulnerabilities |
+
+Both started clean, so both **fail the build** on any finding: a new
+issue blocks the merge instead of sitting in a log. If a finding ever
+turns out to be a false positive, it gets a targeted, commented
+exception rather than the check being switched off.
+
+Dependabot ([`.github/dependabot.yml`](../.github/dependabot.yml)) checks
+weekly for newer GitHub Actions, Python dependencies, and Terraform
+providers, and opens a pull request for each group of updates. Those
+pull requests run the same checks before they can be merged. Its first
+run updated pytest, boto3, and the AWS provider, all merged with CI green.
