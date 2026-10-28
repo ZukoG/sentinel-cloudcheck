@@ -438,9 +438,18 @@ pip install -r requirements-dev.txt
 python -m pytest -v
 ```
 
-CI runs the same tests on Python 3.13, plus `terraform fmt -check` and
-`terraform validate`, on every pull request. CI never needs AWS
-credentials.
+CI runs on every pull request, as four parallel jobs:
+
+| Job | What it checks |
+|---|---|
+| Python tests | The same 49 tests, on Python 3.13 (the Lambda runtime) |
+| bandit (SAST) | `src/` for insecure Python patterns |
+| pip-audit (dependency scan) | Known vulnerabilities in `requirements-dev.txt` |
+| Terraform checks | `terraform fmt -check` and `terraform validate` |
+
+bandit and pip-audit fail the build on any finding. CI never needs AWS
+credentials, and Dependabot opens a pull request whenever an action,
+Python dependency, or Terraform provider falls behind.
 
 ## Security
 
