@@ -6,3 +6,8 @@ pytest>=9.1.1
 # Only so handler.py can be imported locally for tests. Never bundled into
 # the Lambda zip, the runtime already provides it. Tests never call AWS.
 boto3>=1.43.118
+
+# Security checks run in CI: static analysis of src/ and a known
+# vulnerability scan of these dependencies.
+bandit>=1.9.4
+pip-audit>=2.10.1
