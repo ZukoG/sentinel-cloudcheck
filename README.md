@@ -513,6 +513,8 @@ docs/
 - [Software Requirements Specification](docs/SRS.md)
 - [Security and Cost](docs/SECURITY_AND_COST.md)
 - [ADR 0001: Serverless Lambda over EC2](docs/adr/0001-serverless-lambda-over-ec2.md)
+- [ADR 0002: DynamoDB for scan results](docs/adr/0002-dynamodb-for-scan-results.md)
+- [ADR 0003: Pin the fetch to the checked IP](docs/adr/0003-ip-pinned-fetching.md)
 
 ## License
 
