@@ -1,6 +1,6 @@
 # Software Requirements Specification: sentinel-cloudcheck
 
-Version 1.0.0
+Version 1.0.1
 
 ## 1. Purpose
 
@@ -84,11 +84,11 @@ case-insensitively.
 
 | # | Header | Passes when |
 |---|---|---|
-| 1 | `Strict-Transport-Security` | present and `max-age` is at least 15552000 (180 days) |
+| 1 | `Strict-Transport-Security` | present and `max-age` is at least 15552000 (180 days); the directive name is case-insensitive, and spaces around `=` or a quoted value are allowed, as RFC 6797 permits |
 | 2 | `Content-Security-Policy` | present and not empty |
 | 3 | `X-Content-Type-Options` | value is `nosniff` |
 | 4 | `X-Frame-Options` | value is `DENY` or `SAMEORIGIN`, or the CSP contains a `frame-ancestors` directive |
-| 5 | `Referrer-Policy` | value is one of `no-referrer`, `same-origin`, `strict-origin`, `strict-origin-when-cross-origin` (if several comma-separated values are given, the last one counts, as in browsers) |
+| 5 | `Referrer-Policy` | value is one of `no-referrer`, `same-origin`, `strict-origin`, `strict-origin-when-cross-origin` (if several comma-separated values are given, the last recognised policy counts and empty or unknown values are skipped, as in browsers) |
 | 6 | `Permissions-Policy` | present and not empty |
 
 - FR-4.1: Score = passed checks / 6 x 100, rounded to the nearest whole number.
