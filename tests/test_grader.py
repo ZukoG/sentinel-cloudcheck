@@ -45,9 +45,16 @@ def test_header_names_are_case_insensitive():
 @pytest.mark.parametrize(
     ("hsts_value", "expected"),
     [
-    ("max-age=100", False),
-    ("max-age=15552000", True),
-    ("max-age=abc", False),
+        ("max-age=100", False),
+        ("max-age=15552000", True),
+        ("max-age=abc", False),
+        ("MAX-AGE=31536000", True),
+        ("includeSubDomains; max-age=31536000; preload", True),
+        ("max-age=15551999", False),
+        ("max-age = 31536000", True),
+        ('max-age="31536000"', True),
+        ('max-age=""', False),
+        ("includeSubDomains; preload", False),
     ],
 )
 def test_hsts_max_age_requirement(hsts_value, expected):
