@@ -1,3 +1,5 @@
+"""Lambda entry point: checks a URL is safe to fetch, fetches its headers, grades them, and stores the result."""
+
 import base64
 import binascii
 import json
@@ -148,6 +150,7 @@ class _PinnedHTTPConnection(http.client.HTTPConnection):
         self._validated_address = address
 
     def connect(self):
+        """Connect to the validated IP instead of looking the hostname up again."""
         self.sock = _open_pinned_socket(
             self._validated_address,
             self.port,
@@ -174,6 +177,7 @@ class _PinnedHTTPSConnection(http.client.HTTPSConnection):
         self._validated_address = address
 
     def connect(self):
+        """Connect to the validated IP, then start TLS checked against the original hostname."""
         raw_socket = _open_pinned_socket(
             self._validated_address,
             self.port,
@@ -288,7 +292,11 @@ def _response(status: int, body: dict) -> dict:
 
 
 def lambda_handler(event, context):
-    """Handle a scan request from API Gateway."""
+    """Handle a POST /scan request from API Gateway and return the HTTP response.
+
+    Returns 200 with the graded scan, 400 for a bad request or a non-public
+    destination, and 502 if the target cannot be reached.
+    """
 
     # 1. Read the request body.
     body = event.get("body") or ""
@@ -329,7 +337,7 @@ def lambda_handler(event, context):
             },
         )
 
-        # 3. Validate the requested URL.
+    # 3. Validate the requested URL.
     url = payload.get("url")
 
     if isinstance(url, str):
