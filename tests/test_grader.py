@@ -45,9 +45,16 @@ def test_header_names_are_case_insensitive():
 @pytest.mark.parametrize(
     ("hsts_value", "expected"),
     [
-    ("max-age=100", False),
-    ("max-age=15552000", True),
-    ("max-age=abc", False),
+        ("max-age=100", False),
+        ("max-age=15552000", True),
+        ("max-age=abc", False),
+        ("MAX-AGE=31536000", True),
+        ("includeSubDomains; max-age=31536000; preload", True),
+        ("max-age=15551999", False),
+        ("max-age = 31536000", True),
+        ('max-age="31536000"', True),
+        ('max-age=""', False),
+        ("includeSubDomains; preload", False),
     ],
 )
 def test_hsts_max_age_requirement(hsts_value, expected):
@@ -76,8 +83,14 @@ def test_csp_frame_ancestors_can_replace_x_frame_options():
 @pytest.mark.parametrize(
     ("policy", "expected"),
     [
-    ("unsafe-url, no-referrer", True),
-    ("no-referrer, unsafe-url", False),
+        ("unsafe-url, no-referrer", True),
+        ("no-referrer, unsafe-url", False),
+        ("  Strict-Origin-When-Cross-Origin  ", True),
+        ("no-referrer,strict-origin", True),
+        ("strict-origin,", True),
+        ("no-referrer, some-future-policy", True),
+        ("unsafe-url, some-future-policy", False),
+        ("some-future-policy", False),
     ],
 )
 def test_referrer_policy_uses_last_value(policy, expected):

@@ -9,6 +9,17 @@ ACCEPTED_REFERRER_POLICIES = {
     'strict-origin-when-cross-origin',
 }
 
+KNOWN_REFERRER_POLICIES = {
+    'no-referrer',
+    'no-referrer-when-downgrade',
+    'origin',
+    'origin-when-cross-origin',
+    'same-origin',
+    'strict-origin',
+    'strict-origin-when-cross-origin',
+    'unsafe-url',
+}
+
 # Minimum scores for each grade
 GRADE_A_MIN = 90
 GRADE_B_MIN = 75
@@ -36,16 +47,22 @@ def _check_hsts(headers: dict[str, str]) -> dict:
     max_age = None
     
     for directive in value.split(';'):
-        directive = directive.strip()
-        
-        if directive.lower().startswith('max-age='):
-            max_age_text = directive.split('=', 1)[1].strip()
-            
+        name, _, value = directive.partition("=")
+
+        if name.strip().lower() == "max-age":
+            max_age_text = value.strip()
+
+            if (
+                len(max_age_text) >= 2
+                and max_age_text.startswith('"')
+                and max_age_text.endswith('"')
+            ):
+                max_age_text = max_age_text[1:-1]
+
             try:
                 max_age = int(max_age_text)
             except ValueError:
                 max_age = None
-                
                 break
     
     if max_age is None:
@@ -136,7 +153,20 @@ def _check_referrer_policy(headers: dict[str, str]) -> dict:
             "Header is missing or empty",
         )
 
-    final_policy = value.split(",")[-1].strip().lower()
+    recognised_policies = [
+        token.strip().lower()
+        for token in value.split(",")
+        if token.strip().lower() in KNOWN_REFERRER_POLICIES
+    ]
+
+    if not recognised_policies:
+        return _result(
+            "Referrer-Policy",
+            False,
+            "No recognised policy",
+        )
+
+    final_policy = recognised_policies[-1]
 
     if final_policy in ACCEPTED_REFERRER_POLICIES:
         return _result(
