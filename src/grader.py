@@ -36,16 +36,22 @@ def _check_hsts(headers: dict[str, str]) -> dict:
     max_age = None
     
     for directive in value.split(';'):
-        directive = directive.strip()
-        
-        if directive.lower().startswith('max-age='):
-            max_age_text = directive.split('=', 1)[1].strip()
-            
+        name, _, value = directive.partition("=")
+
+        if name.strip().lower() == "max-age":
+            max_age_text = value.strip()
+
+            if (
+                len(max_age_text) >= 2
+                and max_age_text.startswith('"')
+                and max_age_text.endswith('"')
+            ):
+                max_age_text = max_age_text[1:-1]
+
             try:
                 max_age = int(max_age_text)
             except ValueError:
                 max_age = None
-                
                 break
     
     if max_age is None:
