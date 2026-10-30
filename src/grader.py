@@ -9,6 +9,17 @@ ACCEPTED_REFERRER_POLICIES = {
     'strict-origin-when-cross-origin',
 }
 
+KNOWN_REFERRER_POLICIES = {
+    'no-referrer',
+    'no-referrer-when-downgrade',
+    'origin',
+    'origin-when-cross-origin',
+    'same-origin',
+    'strict-origin',
+    'strict-origin-when-cross-origin',
+    'unsafe-url',
+}
+
 # Minimum scores for each grade
 GRADE_A_MIN = 90
 GRADE_B_MIN = 75
@@ -142,7 +153,20 @@ def _check_referrer_policy(headers: dict[str, str]) -> dict:
             "Header is missing or empty",
         )
 
-    final_policy = value.split(",")[-1].strip().lower()
+    recognised_policies = [
+        token.strip().lower()
+        for token in value.split(",")
+        if token.strip().lower() in KNOWN_REFERRER_POLICIES
+    ]
+
+    if not recognised_policies:
+        return _result(
+            "Referrer-Policy",
+            False,
+            "No recognised policy",
+        )
+
+    final_policy = recognised_policies[-1]
 
     if final_policy in ACCEPTED_REFERRER_POLICIES:
         return _result(
