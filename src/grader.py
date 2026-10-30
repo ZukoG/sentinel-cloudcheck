@@ -1,3 +1,5 @@
+"""Grades six HTTP security headers and turns the results into a score and letter grade."""
+
 # HSTS requirement
 HSTS_MIN_AGE = 15552000
 
@@ -9,6 +11,8 @@ ACCEPTED_REFERRER_POLICIES = {
     'strict-origin-when-cross-origin',
 }
 
+# Every policy the Referrer Policy spec defines. Anything else is ignored,
+# the same way browsers ignore it.
 KNOWN_REFERRER_POLICIES = {
     'no-referrer',
     'no-referrer-when-downgrade',
@@ -27,6 +31,7 @@ GRADE_C_MIN = 60
 GRADE_D_MIN = 40
 
 def _result(header: str, passed: bool, detail: str) -> dict:
+    """Build the result of one header check."""
     return {
     "header": header,
     "passed": passed,
@@ -35,6 +40,7 @@ def _result(header: str, passed: bool, detail: str) -> dict:
 
 
 def _check_hsts(headers: dict[str, str]) -> dict:
+    """Pass if Strict-Transport-Security has a max-age of at least 180 days."""
     value = headers.get('strict-transport-security')
     
     if value is None:
@@ -87,6 +93,7 @@ def _check_hsts(headers: dict[str, str]) -> dict:
     
     
 def _check_csp(headers: dict[str, str]) -> dict:
+    """Pass if Content-Security-Policy is present and not empty."""
     value = headers.get('content-security-policy')
         
     if not value:
@@ -104,6 +111,7 @@ def _check_csp(headers: dict[str, str]) -> dict:
     
 
 def _check_content_type_options(headers: dict[str, str]) -> dict:
+    """Pass if X-Content-Type-Options is nosniff."""
     value = headers.get('x-content-type-options')
     
     if value is None or value.lower() != 'nosniff':
@@ -120,6 +128,11 @@ def _check_content_type_options(headers: dict[str, str]) -> dict:
     )
 
 def _check_frame_options(headers: dict[str, str]) -> dict:
+    """Pass if the page is protected from being shown inside another site's frame.
+
+    Either X-Frame-Options is DENY or SAMEORIGIN, or the CSP has a
+    frame-ancestors directive.
+    """
     value = headers.get('x-frame-options', '')
     csp = headers.get('content-security-policy', '')
     
@@ -144,6 +157,11 @@ def _check_frame_options(headers: dict[str, str]) -> dict:
     )
 
 def _check_referrer_policy(headers: dict[str, str]) -> dict:
+    """Pass if the policy a browser would apply is one of the accepted ones.
+
+    As in browsers, the last recognised policy in a comma-separated list wins,
+    and empty or unknown values are skipped.
+    """
     value = headers.get("referrer-policy")
 
     if value is None or not value:
@@ -182,6 +200,7 @@ def _check_referrer_policy(headers: dict[str, str]) -> dict:
     )
     
 def _check_permissions_policy(headers: dict[str, str]) -> dict:
+    """Pass if Permissions-Policy is present and not empty."""
     value = headers.get("permissions-policy")
 
     if value is None or not value:
@@ -198,6 +217,11 @@ def _check_permissions_policy(headers: dict[str, str]) -> dict:
     )
 
 def grade_headers(headers: dict[str, str]) -> dict:
+    """Grade a response's headers and return its score, grade, and per-header results.
+
+    Header names are matched in any case. The score is the percentage of the
+    six checks that pass (0 to 100), which maps to a grade from A to F.
+    """
     normalised_headers = {
         name.lower(): value.strip()
         for name, value in headers.items()
